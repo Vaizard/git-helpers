@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+echo "$(tput bold)*** gh-sync-upstream <path-to-local-repo>"
+echo "*** synces the repo in <path-to-local-repo> with upstream. If needed,"
+echo "*** the upstream remote is configured automatically to the parent repo."
+echo "$(tput sgr0)"
+pushd "${1}"
+fetch=`git config --local remote.origin.url | awk -F: '{ print $2 }' | awk -F. '{ print $1 }' | awk '{print tolower($1)}'`
+parent=`curl -s "https://api.github.com/repos/${fetch}" | jq -r '.parent.full_name'`
+echo ""
+echo "$(tput sgr0)$(tput bold)$(tput setaf 3)*** ABOUT TO SYNC $(tput setaf 7)${fetch}$(tput setaf 3) WITH ITS PARENT/UPSTREAM $(tput setaf 7)${parent}"
+echo "$(tput setaf 3)*** MAKE SURE YOU REALLY SYNC THE RIGHT REPO. PRESS [ENTER] TO CONTINUE$(tput sgr0)"
+read
+echo ""
+[[ `git remote -v | grep upstream` ]] || echo "`git remote add upstream git@github.com:${parent}.git`"
+git remote -v
+git fetch upstream
+git chechkout master
+git merge upstream/master
+popd
+echo ""
+echo "$(tput sgr0)$(tput bold)$(tput setaf 2)*** DONE$(tput sgr0)"
